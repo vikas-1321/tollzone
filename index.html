@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toll Zone Definition Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 0;
+            min-height: 600px;
+        }
+
+        .map-container {
+            position: relative;
+            background: #f5f5f5;
+        }
+
+        #map {
+            width: 100%;
+            height: 600px;
+        }
+
+        .controls-panel {
+            background: white;
+            padding: 30px;
+            border-left: 1px solid #e0e0e0;
+            overflow-y: auto;
+        }
+
+        .control-section {
+            margin-bottom: 30px;
+        }
+
+        .control-section h3 {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #2196F3;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50, #66BB6A);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #FF9800, #FFB74D);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #F44336, #E57373);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .api-key-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .input-group input {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+
+        .coordinates-output {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .coordinates-output h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .coordinates-output pre {
+            background: #fff;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .location-check {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .location-result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .in-zone {
+            background: #ffecec;
+            color: #d32f2f;
+            border: 2px solid #f44336;
+        }
+
+        .not-in-zone {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 2px solid #4caf50;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls-panel {
+                border-left: none;
+                border-top: 1px solid #e0e0e0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 Toll Zone Definition Tool</h1>
+            <p>Create and manage toll zones with precision using Google Maps</p>
+        </div>
+
+        <div class="main-content">
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+
+            <div class="controls-panel">
+                <!-- API Key Section -->
+                <div class="api-key-section">
+                    <div class="input-group">
+                        <label for="apiKey">Google Maps API Key:</label>
+                        <input type="text" id="apiKey" placeholder="Enter your Google Maps API key">
+                        <button class="btn btn-primary" onclick="loadGoogleMaps()">Load Map</button>
+                    </div>
+                </div>
+
+                <!-- Drawing Controls -->
+                <div class="control-section">
+                    <h3>Drawing Tools</h3>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="drawPolygon" onclick="startDrawingPolygon()" disabled>
+                            📐 Draw Area Zone
+                        </button>
+                        <button class="btn btn-secondary" id="drawPolyline" onclick="startDrawingPolyline()" disabled>
+                            🛣️ Draw Road Segment
+                        </button>
+                        <button class="btn btn-warning" onclick="clearAll()" disabled id="clearBtn">
+                            🗑️ Clear All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Location Tracking -->
+                <div class="control-section">
+                    <h3>Real-time Location</h3>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="startLocationTracking()" id="startTrackingBtn" disabled>
+                            📍 Start Location Tracking
+                        </button>
+                        <button class="btn btn-danger" onclick="stopLocationTracking()" id="stopTrackingBtn" disabled style="display: none;">
+                            ⏹️ Stop Location Tracking
+                        </button>
+                        <button class="btn btn-warning" onclick="requestHighAccuracyLocation()" id="highAccuracyBtn" disabled>
+                            🎯 Get High Accuracy Location
+                        </button>
+                    </div>
+                    <div class="accuracy-settings" style="margin-top: 15px;">
+                        <label style="font-size: 12px; color: #666;">
+                            <input type="checkbox" id="showAccuracyCircle" checked onchange="toggleAccuracyCircle()"> 
+                            Show accuracy circle
+                        </label>
+                        <br>
+                        <label style="font-size: 12px; color: #666;">
+                            Accuracy threshold: 
+                            <select id="accuracyThreshold" onchange="updateAccuracyThreshold()">
+                                <option value="5">5m (Best)</option>
+                                <option value="10" selected>10m (Good)</option>
+                                <option value="20">20m (Fair)</option>
+                                <option value="50">50m (Basic)</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div id="currentLocationDisplay" class="status info" style="display: none; margin-top: 15px;">
+                        <strong>Current Location:</strong><br>
+                        <span id="locationCoords">Getting location...</span><br>
+                        <span id="locationStatus">Initializing...</span><br>
+                        <div id="locationQuality" style="margin-top: 8px; font-size: 11px;"></div>
+                    </div>
+                </div>
+
+                <!-- Zone Management -->
+                <div class="control-section">
+                    <h3>Zone Management</h3>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="saveTollZones()" disabled id="saveBtn">
+                            💾 Save Toll Zones
+                        </button>
+                        <button class="btn btn-primary" onclick="exportJSON()" disabled id="exportBtn">
+                            📋 Export JSON
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Location Check -->
+                <div class="control-section">
+                    <h3>Manual Location Check</h3>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="checkCurrentLocation()" disabled id="locationBtn">
+                            📍 Check Current Location Once
+                        </button>
+                    </div>
+                    <div id="locationResult"></div>
+                </div>
+
+                <!-- Coordinates Output -->
+                <div class="control-section">
+                    <div class="coordinates-output">
+                        <h4>Toll Zone Coordinates</h4>
+                        <pre id="coordinatesDisplay">No zones defined yet...</pre>
+                    </div>
+                </div>
+
+                <!-- Status Messages -->
+                <div id="statusMessages"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let drawingManager;
+        let tollZones = [];
+        let isDrawingMode = false;
+        let currentZoneType = null;
+        let roadsService;
+        let userLocationMarker = null;
+        let watchId = null;
+        let isTrackingLocation = false;
+        let locationHistory = [];
+        let accuracyCircle = null;
+        let bestAccuracyThreshold = 10; // meters
+
+        // Initialize the application
+        function loadGoogleMaps() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            
+            if (!apiKey) {
+                showStatus('Please enter a valid Google Maps API key', 'error');
+                return;
+            }
+
+            // Load Google Maps API
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=drawing,geometry&callback=initMap`;
+            script.onerror = () => showStatus('Failed to load Google Maps API. Please check your API key.', 'error');
+            document.head.appendChild(script);
+        }
+
+        // Initialize the map
+        function initMap() {
+            // Default to Bengaluru, Karnataka, IN (user's location)
+            const defaultCenter = { lat: 12.9716, lng: 77.5946 };
+            
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 12,
+                center: defaultCenter,
+                mapTypeId: 'roadmap',
+                styles: [
+                    {
+                        featureType: 'poi',
+                        elementType: 'labels',
+                        stylers: [{ visibility: 'off' }]
+                    }
+                ]
+            });
+
+            // Initialize Roads Service
+            roadsService = new google.maps.DirectionsService();
+
+            // Initialize Drawing Manager
+            drawingManager = new google.maps.drawing.DrawingManager({
+                drawingMode: null,
+                drawingControl: false,
+                polygonOptions: {
+                    fillColor: '#FF6B6B',
+                    fillOpacity: 0.3,
+                    strokeColor: '#FF6B6B',
+                    strokeWeight: 3,
+                    editable: true,
+                    draggable: true
+                },
+                polylineOptions: {
+                    strokeColor: '#2196F3',
+                    strokeWeight: 4,
+                    editable: true,
+                    draggable: true
+                }
+            });
+
+            drawingManager.setMap(map);
+
+            // Event listeners for completed shapes
+            google.maps.event.addListener(drawingManager, 'polygoncomplete', function(polygon) {
+                handlePolygonComplete(polygon);
+            });
+
+            google.maps.event.addListener(drawingManager, 'polylinecomplete', function(polyline) {
+                handlePolylineComplete(polyline);
+            });
+
+            // Enable buttons
+            enableControls();
+            showStatus('Map loaded successfully! You can now start drawing toll zones.', 'success');
+        }
+
+        function enableControls() {
+            document.getElementById('drawPolygon').disabled = false;
+            document.getElementById('drawPolyline').disabled = false;
+            document.getElementById('clearBtn').disabled = false;
+            document.getElementById('saveBtn').disabled = false;
+            document.getElementById('exportBtn').disabled = false;
+            document.getElementById('locationBtn').disabled = false;
+            document.getElementById('startTrackingBtn').disabled = false;
+            document.getElementById('highAccuracyBtn').disabled = false;
+        }
+
+        function updateAccuracyThreshold() {
+            bestAccuracyThreshold = parseInt(document.getElementById('accuracyThreshold').value);
+            showStatus(`Accuracy threshold set to ${bestAccuracyThreshold}m`, 'info');
+        }
+
+        function toggleAccuracyCircle() {
+            if (accuracyCircle) {
+                const show = document.getElementById('showAccuracyCircle').checked;
+                accuracyCircle.setVisible(show);
+            }
+        }
+
+        function requestHighAccuracyLocation() {
+            if (!navigator.geolocation) {
+                showStatus('Geolocation is not supported by this browser', 'error');
+                return;
+            }
+
+            showStatus('Getting high accuracy location... This may take up to 30 seconds', 'info');
+
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 30000, // 30 seconds
+                maximumAge: 0 // Always get fresh location
+            };
+
+            // Try multiple times to get the best accuracy
+            let attempts = 0;
+            let bestLocation = null;
+            const maxAttempts = 5;
+
+            function tryGetLocation() {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        attempts++;
+                        
+                        if (!bestLocation || position.coords.accuracy < bestLocation.coords.accuracy) {
+                            bestLocation = position;
+                        }
+
+                        if (position.coords.accuracy <= bestAccuracyThreshold || attempts >= maxAttempts) {
+                            // We got good accuracy or max attempts reached
+                            updateUserLocationWithHighAccuracy(bestLocation);
+                            showStatus(`High accuracy location obtained! Accuracy: ±${Math.round(bestLocation.coords.accuracy)}m (${attempts} attempts)`, 'success');
+                        } else {
+                            // Try again for better accuracy
+                            setTimeout(tryGetLocation, 1000);
+                            showStatus(`Attempt ${attempts}/${maxAttempts}: ±${Math.round(position.coords.accuracy)}m (trying for ±${bestAccuracyThreshold}m)`, 'info');
+                        }
+                    },
+                    (error) => {
+                        if (bestLocation) {
+                            updateUserLocationWithHighAccuracy(bestLocation);
+                            showStatus(`Used best available location: ±${Math.round(bestLocation.coords.accuracy)}m`, 'info');
+                        } else {
+                            handleLocationError(error);
+                        }
+                    },
+                    options
+                );
+            }
+
+            tryGetLocation();
+        }
+
+        function updateUserLocationWithHighAccuracy(position) {
+            const userLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+
+            // Create or update marker
+            updateLocationMarker(userLocation, position, true);
+
+            // Check toll zones
+            const result = isLocationInTollZone(userLocation);
+            updateLocationDisplay(userLocation, result, position);
+
+            // Center map with appropriate zoom based on accuracy
+            map.setCenter(userLocation);
+            if (position.coords.accuracy <= 10) {
+                map.setZoom(18); // Street level
+            } else if (position.coords.accuracy <= 50) {
+                map.setZoom(16); // Block level
+            } else {
+                map.setZoom(14); // Neighborhood level
+            }
+        }
+
+        function startLocationTracking() {
+            if (!navigator.geolocation) {
+                showStatus('Geolocation is not supported by this browser', 'error');
+                return;
+            }
+
+            // Enhanced options for maximum accuracy
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 15000, // 15 seconds timeout
+                maximumAge: 2000 // Accept cached location if less than 2 seconds old
+            };
+
+            watchId = navigator.geolocation.watchPosition(
+                updateUserLocationTracked,
+                handleLocationError,
+                options
+            );
+
+            isTrackingLocation = true;
+            locationHistory = []; // Reset history
+            
+            document.getElementById('startTrackingBtn').style.display = 'none';
+            document.getElementById('stopTrackingBtn').style.display = 'block';
+            document.getElementById('currentLocationDisplay').style.display = 'block';
+            
+            showStatus('Started high-accuracy real-time location tracking', 'success');
+        }
+
+        function updateUserLocationTracked(position) {
+            // Store location in history for smoothing
+            locationHistory.push({
+                position: position,
+                timestamp: Date.now()
+            });
+
+            // Keep only last 5 positions
+            if (locationHistory.length > 5) {
+                locationHistory.shift();
+            }
+
+            // Use smoothed location if we have enough history and accuracy is poor
+            let finalPosition = position;
+            if (locationHistory.length >= 3 && position.coords.accuracy > 20) {
+                finalPosition = smoothLocation(locationHistory);
+            }
+
+            const userLocation = {
+                lat: finalPosition.coords.latitude,
+                lng: finalPosition.coords.longitude
+            };
+
+            // Only update if this is significantly more accurate or different location
+            const shouldUpdate = !userLocationMarker || 
+                                position.coords.accuracy <= bestAccuracyThreshold ||
+                                getDistanceBetweenPoints(userLocation, {
+                                    lat: userLocationMarker.getPosition().lat(),
+                                    lng: userLocationMarker.getPosition().lng()
+                                }) > 5; // 5 meter threshold
+
+            if (shouldUpdate) {
+                updateLocationMarker(userLocation, finalPosition, false);
+                
+                // Check toll zone status
+                const result = isLocationInTollZone(userLocation);
+                updateLocationDisplay(userLocation, result, finalPosition);
+            }
+        }
+
+        function smoothLocation(history) {
+            // Weighted average based on accuracy (more accurate locations get higher weight)
+            let totalWeight = 0;
+            let weightedLat = 0;
+            let weightedLng = 0;
+            let bestAccuracy = Infinity;
+
+            history.forEach(entry => {
+                const accuracy = entry.position.coords.accuracy;
+                const weight = 1 / (accuracy * accuracy); // Inverse square of accuracy
+                
+                weightedLat += entry.position.coords.latitude * weight;
+                weightedLng += entry.position.coords.longitude * weight;
+                totalWeight += weight;
+                
+                if (accuracy < bestAccuracy) {
+                    bestAccuracy = accuracy;
+                }
+            });
+
+            // Create smoothed position object
+            const smoothed = {
+                coords: {
+                    latitude: weightedLat / totalWeight,
+                    longitude: weightedLng / totalWeight,
+                    accuracy: bestAccuracy * 1.2, // Slightly increase accuracy estimate for smoothed data
+                    altitude: history[history.length - 1].position.coords.altitude,
+                    altitudeAccuracy: history[history.length - 1].position.coords.altitudeAccuracy,
+                    heading: history[history.length - 1].position.coords.heading,
+                    speed: history[history.length - 1].position.coords.speed
+                },
+                timestamp: history[history.length - 1].position.timestamp
+            };
+
+            return smoothed;
+        }
+
+        function updateLocationMarker(userLocation, position, isHighAccuracy) {
+            // Update or create user location marker
+            if (userLocationMarker) {
+                userLocationMarker.setPosition(userLocation);
+            } else {
+                const iconColor = isHighAccuracy ? '#FF5722' : '#4CAF50';
+                const iconSize = isHighAccuracy ? 36 : 32;
+                
+                userLocationMarker = new google.maps.Marker({
+                    position: userLocation,
+                    map: map,
+                    title: `Your Current Location (±${Math.round(position.coords.accuracy)}m)`,
+                    icon: {
+                        url: 'data:image/svg+xml;base64,' + btoa(`
+                            <svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 32 32" fill="none">
+                                <circle cx="16" cy="16" r="12" fill="${iconColor}" stroke="#fff" stroke-width="3"/>
+                                <circle cx="16" cy="16" r="4" fill="#fff"/>
+                                <circle cx="16" cy="16" r="15" fill="none" stroke="${iconColor}" stroke-width="2" opacity="0.3"/>
+                                ${position.coords.accuracy <= 10 ? '<circle cx="16" cy="16" r="6" fill="none" stroke="#fff" stroke-width="1" opacity="0.8"/>' : ''}
+                            </svg>
+                        `),
+                        scaledSize: new google.maps.Size(iconSize, iconSize),
+                        anchor: new google.maps.Point(iconSize/2, iconSize/2)
+                    },
+                    animation: isHighAccuracy ? google.maps.Animation.BOUNCE : google.maps.Animation.DROP
+                });
+            }
+
+            // Update or create accuracy circle
+            if (document.getElementById('showAccuracyCircle').checked) {
+                if (accuracyCircle) {
+                    accuracyCircle.setCenter(userLocation);
+                    accuracyCircle.setRadius(position.coords.accuracy);
+                } else {
+                    accuracyCircle = new google.maps.Circle({
+                        center: userLocation,
+                        radius: position.coords.accuracy,
+                        map: map,
+                        fillColor: '#4285F4',
+                        fillOpacity: 0.1,
+                        strokeColor: '#4285F4',
+                        strokeOpacity: 0.3,
+                        strokeWeight: 1
+                    });
+                }
+            }
+
+            // Update marker title with current accuracy
+            userLocationMarker.setTitle(`Your Location (±${Math.round(position.coords.accuracy)}m)`);
+        }
+
+        function getDistanceBetweenPoints(point1, point2) {
+            const R = 6371000; // Earth's radius in meters
+            const dLat = (point2.lat - point1.lat) * Math.PI / 180;
+            const dLng = (point2.lng - point1.lng) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(point1.lat * Math.PI / 180) * Math.cos(point2.lat * Math.PI / 180) *
+                      Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function stopLocationTracking() {
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+
+            isTrackingLocation = false;
+            locationHistory = [];
+            
+            document.getElementById('startTrackingBtn').style.display = 'block';
+            document.getElementById('stopTrackingBtn').style.display = 'none';
+            document.getElementById('currentLocationDisplay').style.display = 'none';
+
+            if (userLocationMarker) {
+                userLocationMarker.setMap(null);
+                userLocationMarker = null;
+            }
+
+            if (accuracyCircle) {
+                accuracyCircle.setMap(null);
+                accuracyCircle = null;
+            }
+
+            showStatus('Stopped location tracking', 'info');
+        }
+
+        function updateUserLocation(position) {
+            updateUserLocationTracked(position);
+        }
+
+        function updateLocationDisplay(location, tollResult, position) {
+            const coordsElement = document.getElementById('locationCoords');
+            const statusElement = document.getElementById('locationStatus');
+            const qualityElement = document.getElementById('locationQuality');
+
+            // Update coordinates display with more precision
+            coordsElement.innerHTML = `
+                Lat: ${location.lat.toFixed(8)}<br>
+                Lng: ${location.lng.toFixed(8)}<br>
+                <small>Accuracy: ±${Math.round(position.coords.accuracy)}m</small>
+            `;
+
+            // Update location quality indicator
+            let qualityColor, qualityText;
+            if (position.coords.accuracy <= 5) {
+                qualityColor = '#4CAF50';
+                qualityText = '🎯 Excellent GPS Signal';
+            } else if (position.coords.accuracy <= 10) {
+                qualityColor = '#8BC34A';
+                qualityText = '📍 Very Good GPS Signal';
+            } else if (position.coords.accuracy <= 20) {
+                qualityColor = '#FFC107';
+                qualityText = '📱 Good GPS Signal';
+            } else if (position.coords.accuracy <= 50) {
+                qualityColor = '#FF9800';
+                qualityText = '🌐 Fair GPS Signal';
+            } else {
+                qualityColor = '#F44336';
+                qualityText = '🔍 Poor GPS Signal';
+            }
+
+            qualityElement.innerHTML = `
+                <span style="color: ${qualityColor}; font-weight: bold;">${qualityText}</span><br>
+                <span style="color: #666;">
+                    Speed: ${position.coords.speed ? Math.round(position.coords.speed * 3.6) + ' km/h' : 'Unknown'} | 
+                    Heading: ${position.coords.heading ? Math.round(position.coords.heading) + '°' : 'Unknown'}
+                </span>
+            `;
+
+            // Update toll zone status
+            if (tollResult.inTollZone) {
+                const zoneList = tollResult.zones.map(zone => {
+                    if (zone.distance !== undefined) {
+                        return `${zone.zoneName} (${zone.distance}m from road)`;
+                    }
+                    return zone.zoneName;
+                }).join(', ');
+
+                statusElement.innerHTML = `
+                    <span style="color: #d32f2f; font-weight: bold;">🚨 IN TOLL ZONE</span><br>
+                    <small>${zoneList}</small>
+                `;
+                statusElement.style.background = '#ffecec';
+                statusElement.style.border = '1px solid #f44336';
+            } else {
+                statusElement.innerHTML = `
+                    <span style="color: #2e7d32; font-weight: bold;">✅ NOT IN TOLL ZONE</span>
+                `;
+                statusElement.style.background = '#e8f5e8';
+                statusElement.style.border = '1px solid #4caf50';
+            }
+
+            // Update page title with toll status and accuracy
+            document.title = tollResult.inTollZone ? 
+                `🚨 IN TOLL ZONE (±${Math.round(position.coords.accuracy)}m) - Toll Zone Tool` : 
+                `✅ Clear (±${Math.round(position.coords.accuracy)}m) - Toll Zone Tool`;
+        }
+
+        function handleLocationError(error) {
+            let message = 'Location error: ';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    message += 'Location access denied by user';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message += 'Location information unavailable';
+                    break;
+                case error.TIMEOUT:
+                    message += 'Location request timed out';
+                    break;
+                default:
+                    message += 'Unknown location error';
+                    break;
+            }
+            
+            showStatus(message, 'error');
+            document.getElementById('locationStatus').textContent = message;
+        }
+
+        function startDrawingPolygon() {
+            if (isDrawingMode) {
+                stopDrawing();
+            }
+            drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+            currentZoneType = 'polygon';
+            isDrawingMode = true;
+            showStatus('Click on the map to start drawing an area-based toll zone. Click the first point again to complete.', 'info');
+        }
+
+        function startDrawingPolyline() {
+            if (isDrawingMode) {
+                stopDrawing();
+            }
+            drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
+            currentZoneType = 'polyline';
+            isDrawingMode = true;
+            showStatus('Click on the map to start drawing a road-based toll segment. Double-click to finish.', 'info');
+        }
+
+        function stopDrawing() {
+            drawingManager.setDrawingMode(null);
+            isDrawingMode = false;
+        }
+
+        function handlePolygonComplete(polygon) {
+            stopDrawing();
+            
+            const coordinates = [];
+            const path = polygon.getPath();
+            
+            for (let i = 0; i < path.getLength(); i++) {
+                const point = path.getAt(i);
+                coordinates.push({
+                    lat: point.lat(),
+                    lng: point.lng()
+                });
+            }
+
+            const tollZone = {
+                id: 'zone_' + Date.now(),
+                type: 'polygon',
+                name: `Area Zone ${tollZones.filter(z => z.type === 'polygon').length + 1}`,
+                coordinates: coordinates,
+                shape: polygon
+            };
+
+            tollZones.push(tollZone);
+            updateCoordinatesDisplay();
+            showStatus(`Area-based toll zone created with ${coordinates.length} points`, 'success');
+
+            // Add click listener for deletion
+            google.maps.event.addListener(polygon, 'rightclick', function() {
+                deleteZone(tollZone.id);
+            });
+        }
+
+        async function handlePolylineComplete(polyline) {
+            stopDrawing();
+            showStatus('Snapping polyline to roads...', 'info');
+
+            try {
+                const path = polyline.getPath();
+                const coordinates = [];
+                
+                for (let i = 0; i < path.getLength(); i++) {
+                    const point = path.getAt(i);
+                    coordinates.push({
+                        lat: point.lat(),
+                        lng: point.lng()
+                    });
+                }
+
+                // Snap to roads using Directions API (as a workaround for Roads API)
+                const snappedCoordinates = await snapToRoads(coordinates);
+                
+                // Update the polyline with snapped coordinates
+                if (snappedCoordinates.length > 0) {
+                    const snappedPath = snappedCoordinates.map(coord => 
+                        new google.maps.LatLng(coord.lat, coord.lng)
+                    );
+                    polyline.setPath(snappedPath);
+                }
+
+                const tollZone = {
+                    id: 'zone_' + Date.now(),
+                    type: 'polyline',
+                    name: `Road Segment ${tollZones.filter(z => z.type === 'polyline').length + 1}`,
+                    coordinates: snappedCoordinates.length > 0 ? snappedCoordinates : coordinates,
+                    originalCoordinates: coordinates,
+                    shape: polyline
+                };
+
+                tollZones.push(tollZone);
+                updateCoordinatesDisplay();
+                showStatus(`Road-based toll segment created and snapped to roads`, 'success');
+
+                // Add click listener for deletion
+                google.maps.event.addListener(polyline, 'rightclick', function() {
+                    deleteZone(tollZone.id);
+                });
+
+            } catch (error) {
+                console.error('Error snapping to roads:', error);
+                showStatus('Could not snap to roads, using original coordinates', 'error');
+                
+                // Use original coordinates if snapping fails
+                const path = polyline.getPath();
+                const coordinates = [];
+                
+                for (let i = 0; i < path.getLength(); i++) {
+                    const point = path.getAt(i);
+                    coordinates.push({
+                        lat: point.lat(),
+                        lng: point.lng()
+                    });
+                }
+
+                const tollZone = {
+                    id: 'zone_' + Date.now(),
+                    type: 'polyline',
+                    name: `Road Segment ${tollZones.filter(z => z.type === 'polyline').length + 1}`,
+                    coordinates: coordinates,
+                    shape: polyline
+                };
+
+                tollZones.push(tollZone);
+                updateCoordinatesDisplay();
+            }
+        }
+
+        async function snapToRoads(coordinates) {
+            try {
+                if (coordinates.length < 2) return coordinates;
+
+                // Use Directions API to snap to roads
+                const directionsService = new google.maps.DirectionsService();
+                
+                const request = {
+                    origin: coordinates[0],
+                    destination: coordinates[coordinates.length - 1],
+                    waypoints: coordinates.slice(1, -1).map(coord => ({
+                        location: coord,
+                        stopover: false
+                    })),
+                    travelMode: google.maps.TravelMode.DRIVING,
+                    avoidHighways: false,
+                    avoidTolls: false
+                };
+
+                return new Promise((resolve, reject) => {
+                    directionsService.route(request, (result, status) => {
+                        if (status === 'OK') {
+                            const route = result.routes[0];
+                            const snappedCoordinates = [];
+                            
+                            route.legs.forEach(leg => {
+                                leg.steps.forEach(step => {
+                                    const path = step.path;
+                                    path.forEach(point => {
+                                        snappedCoordinates.push({
+                                            lat: point.lat(),
+                                            lng: point.lng()
+                                        });
+                                    });
+                                });
+                            });
+                            
+                            resolve(snappedCoordinates);
+                        } else {
+                            console.warn('Directions request failed:', status);
+                            resolve(coordinates); // Return original if snapping fails
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('Error in snapToRoads:', error);
+                return coordinates;
+            }
+        }
+
+        function deleteZone(zoneId) {
+            const zoneIndex = tollZones.findIndex(zone => zone.id === zoneId);
+            if (zoneIndex !== -1) {
+                const zone = tollZones[zoneIndex];
+                zone.shape.setMap(null); // Remove from map
+                tollZones.splice(zoneIndex, 1); // Remove from array
+                updateCoordinatesDisplay();
+                showStatus('Toll zone deleted', 'info');
+            }
+        }
+
+        function clearAll() {
+            tollZones.forEach(zone => {
+                zone.shape.setMap(null);
+            });
+            tollZones = [];
+            updateCoordinatesDisplay();
+            showStatus('All toll zones cleared', 'info');
+        }
+
+        function updateCoordinatesDisplay() {
+            const display = document.getElementById('coordinatesDisplay');
+            
+            if (tollZones.length === 0) {
+                display.textContent = 'No zones defined yet...';
+                return;
+            }
+
+            const output = {
+                tollZones: tollZones.map(zone => ({
+                    id: zone.id,
+                    type: zone.type,
+                    name: zone.name,
+                    coordinates: zone.coordinates,
+                    ...(zone.originalCoordinates && { originalCoordinates: zone.originalCoordinates })
+                })),
+                summary: {
+                    totalZones: tollZones.length,
+                    polygonZones: tollZones.filter(z => z.type === 'polygon').length,
+                    polylineZones: tollZones.filter(z => z.type === 'polyline').length
+                }
+            };
+
+            display.textContent = JSON.stringify(output, null, 2);
+        }
+
+        function saveTollZones() {
+            if (tollZones.length === 0) {
+                showStatus('No toll zones to save', 'error');
+                return;
+            }
+
+            const data = {
+                tollZones: tollZones.map(zone => ({
+                    id: zone.id,
+                    type: zone.type,
+                    name: zone.name,
+                    coordinates: zone.coordinates,
+                    ...(zone.originalCoordinates && { originalCoordinates: zone.originalCoordinates })
+                })),
+                timestamp: new Date().toISOString(),
+                summary: {
+                    totalZones: tollZones.length,
+                    polygonZones: tollZones.filter(z => z.type === 'polygon').length,
+                    polylineZones: tollZones.filter(z => z.type === 'polyline').length
+                }
+            };
+
+            // Simulate backend save (replace with actual API call)
+            console.log('Saving toll zones to backend:', data);
+            
+            // For demonstration, we'll just show a success message
+            // In a real application, you would make an API call here:
+            /*
+            fetch('/api/toll-zones', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                showStatus('Toll zones saved successfully!', 'success');
+            })
+            .catch(error => {
+                showStatus('Failed to save toll zones', 'error');
+            });
+            */
+            
+            showStatus(`Successfully saved ${tollZones.length} toll zones!`, 'success');
+        }
+
+        function exportJSON() {
+            if (tollZones.length === 0) {
+                showStatus('No toll zones to export', 'error');
+                return;
+            }
+
+            const data = {
+                tollZones: tollZones.map(zone => ({
+                    id: zone.id,
+                    type: zone.type,
+                    name: zone.name,
+                    coordinates: zone.coordinates,
+                    ...(zone.originalCoordinates && { originalCoordinates: zone.originalCoordinates })
+                })),
+                timestamp: new Date().toISOString(),
+                summary: {
+                    totalZones: tollZones.length,
+                    polygonZones: tollZones.filter(z => z.type === 'polygon').length,
+                    polylineZones: tollZones.filter(z => z.type === 'polyline').length
+                }
+            };
+
+            // Create and download file
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `toll_zones_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showStatus('JSON file downloaded successfully!', 'success');
+        }
+
+        function checkCurrentLocation() {
+            if (!navigator.geolocation) {
+                showStatus('Geolocation is not supported by this browser', 'error');
+                return;
+            }
+
+            const resultDiv = document.getElementById('locationResult');
+            resultDiv.innerHTML = '<div class="status info">Getting your location...</div>';
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+
+                    const result = isLocationInTollZone(userLocation);
+                    displayOneTimeLocationResult(result, userLocation);
+
+                    // Add temporary marker
+                    const tempMarker = new google.maps.Marker({
+                        position: userLocation,
+                        map: map,
+                        title: 'One-time Location Check',
+                        icon: {
+                            url: 'data:image/svg+xml;base64,' + btoa(`
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <circle cx="12" cy="12" r="8" fill="#FF9800" stroke="#fff" stroke-width="2"/>
+                                    <circle cx="12" cy="12" r="3" fill="#fff"/>
+                                </svg>
+                            `),
+                            scaledSize: new google.maps.Size(24, 24)
+                        }
+                    });
+
+                    // Remove temp marker after 10 seconds
+                    setTimeout(() => {
+                        tempMarker.setMap(null);
+                    }, 10000);
+
+                    // Center map on location
+                    map.setCenter(userLocation);
+                },
+                (error) => {
+                    resultDiv.innerHTML = '<div class="status error">Could not get your location. Please enable location access.</div>';
+                }
+            );
+        }
+
+        function displayOneTimeLocationResult(result, userLocation) {
+            const resultDiv = document.getElementById('locationResult');
+            
+            if (result.inTollZone) {
+                const zoneList = result.zones.map(zone => {
+                    if (zone.distance !== undefined) {
+                        return `${zone.zoneName} (${zone.distance}m from road)`;
+                    }
+                    return zone.zoneName;
+                }).join(', ');
+
+                resultDiv.innerHTML = `
+                    <div class="location-result in-zone">
+                        🚨 IN TOLL ZONE<br>
+                        <small>Zones: ${zoneList}</small><br>
+                        <small>Lat: ${result.location.lat.toFixed(6)}, Lng: ${result.location.lng.toFixed(6)}</small>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="location-result not-in-zone">
+                        ✅ NOT IN TOLL ZONE<br>
+                        <small>Lat: ${result.location.lat.toFixed(6)}, Lng: ${result.location.lng.toFixed(6)}</small>
+                    </div>
+                `;
+            }
+        }
+
+        function isLocationInTollZone(location) {
+            const results = [];
+
+            tollZones.forEach(zone => {
+                if (zone.type === 'polygon') {
+                    const isInside = isPointInPolygon(location, zone.coordinates);
+                    if (isInside) {
+                        results.push({
+                            zoneName: zone.name,
+                            zoneId: zone.id,
+                            zoneType: zone.type
+                        });
+                    }
+                } else if (zone.type === 'polyline') {
+                    const distance = getDistanceToPolyline(location, zone.coordinates);
+                    // Consider within 50 meters of road segment as "in zone"
+                    if (distance <= 50) {
+                        results.push({
+                            zoneName: zone.name,
+                            zoneId: zone.id,
+                            zoneType: zone.type,
+                            distance: Math.round(distance)
+                        });
+                    }
+                }
+            });
+
+            return {
+                inTollZone: results.length > 0,
+                zones: results,
+                location: location
+            };
+        }
+
+        function isPointInPolygon(point, polygonCoords) {
+            const x = point.lat;
+            const y = point.lng;
+            let inside = false;
+
+            for (let i = 0, j = polygonCoords.length - 1; i < polygonCoords.length; j = i++) {
+                const xi = polygonCoords[i].lat;
+                const yi = polygonCoords[i].lng;
+                const xj = polygonCoords[j].lat;
+                const yj = polygonCoords[j].lng;
+
+                if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+                    inside = !inside;
+                }
+            }
+
+            return inside;
+        }
+
+        function getDistanceToPolyline(point, polylineCoords) {
+            let minDistance = Infinity;
+
+            for (let i = 0; i < polylineCoords.length - 1; i++) {
+                const segmentStart = polylineCoords[i];
+                const segmentEnd = polylineCoords[i + 1];
+                const distance = getDistanceToLineSegment(point, segmentStart, segmentEnd);
+                minDistance = Math.min(minDistance, distance);
+            }
+
+            return minDistance;
+        }
+
+        function getDistanceToLineSegment(point, segmentStart, segmentEnd) {
+            // Use Haversine formula for accurate distance calculation
+            const R = 6371000; // Earth's radius in meters
+
+            // Convert to Google Maps LatLng for built-in distance calculation
+            const pointLatLng = new google.maps.LatLng(point.lat, point.lng);
+            const startLatLng = new google.maps.LatLng(segmentStart.lat, segmentStart.lng);
+            const endLatLng = new google.maps.LatLng(segmentEnd.lat, segmentEnd.lng);
+
+            // Calculate distance to line segment
+            const line = new google.maps.Polyline({
+                path: [startLatLng, endLatLng]
+            });
+
+            // Approximate distance to line segment
+            const distToStart = google.maps.geometry.spherical.computeDistanceBetween(pointLatLng, startLatLng);
+            const distToEnd = google.maps.geometry.spherical.computeDistanceBetween(pointLatLng, endLatLng);
+            const segmentLength = google.maps.geometry.spherical.computeDistanceBetween(startLatLng, endLatLng);
+
+            // If segment length is 0, return distance to point
+            if (segmentLength === 0) return distToStart;
+
+            // Calculate perpendicular distance to line segment
+            const a = distToStart;
+            const b = distToEnd;
+            const c = segmentLength;
+
+            // Check if projection falls on segment
+            const s = (a + b + c) / 2;
+            const area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
+            const height = (2 * area) / c;
+
+            // Check if the perpendicular from point falls on the segment
+            const dotProduct = ((point.lat - segmentStart.lat) * (segmentEnd.lat - segmentStart.lat) + 
+                              (point.lng - segmentStart.lng) * (segmentEnd.lng - segmentStart.lng));
+            const segmentLengthSquared = Math.pow(segmentEnd.lat - segmentStart.lat, 2) + 
+                                       Math.pow(segmentEnd.lng - segmentStart.lng, 2);
+            
+            if (segmentLengthSquared === 0) return distToStart;
+            
+            const t = Math.max(0, Math.min(1, dotProduct / segmentLengthSquared));
+            
+            if (t === 0) return distToStart;
+            if (t === 1) return distToEnd;
+            
+            return height;
+        }
+
+        function displayLocationResult(result, userLocation) {
+            const resultDiv = document.getElementById('locationResult');
+            
+            if (result.inTollZone) {
+                const zoneList = result.zones.map(zone => {
+                    if (zone.distance !== undefined) {
+                        return `${zone.zoneName} (${zone.distance}m from road)`;
+                    }
+                    return zone.zoneName;
+                }).join(', ');
+
+                resultDiv.innerHTML = `
+                    <div class="location-result in-zone">
+                        🚨 IN TOLL ZONE<br>
+                        <small>Zones: ${zoneList}</small><br>
+                        <small>Lat: ${result.location.lat.toFixed(6)}, Lng: ${result.location.lng.toFixed(6)}</small>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="location-result not-in-zone">
+                        ✅ NOT IN TOLL ZONE<br>
+                        <small>Lat: ${result.location.lat.toFixed(6)}, Lng: ${result.location.lng.toFixed(6)}</small>
+                    </div>
+                `;
+            }
+
+            // Add marker for user location (temporary for one-time check)
+            const tempMarker = new google.maps.Marker({
+                position: userLocation,
+                map: map,
+                title: 'Your Current Location',
+                icon: {
+                    url: 'data:image/svg+xml;base64,' + btoa(`
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="8" fill="#4CAF50" stroke="#fff" stroke-width="2"/>
+                            <circle cx="12" cy="12" r="3" fill="#fff"/>
+                        </svg>
+                    `),
+                    scaledSize: new google.maps.Size(24, 24)
+                }
+            });
+
+            // Remove temp marker after 5 seconds
+            setTimeout(() => {
+                tempMarker.setMap(null);
+            }, 5000);
+
+            // Center map on user location
+            map.setCenter(userLocation);
+        }
+
+        function showStatus(message, type) {
+            const statusContainer = document.getElementById('statusMessages');
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            
+            statusContainer.appendChild(statusDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (statusDiv.parentNode) {
+                    statusDiv.parentNode.removeChild(statusDiv);
+                }
+            }, 5000);
+        }
+
+        // Utility functions for location checking
+        function checkSpecificLocation(lat, lng) {
+            const location = { lat: lat, lng: lng };
+            const result = isLocationInTollZone(location);
+            
+            console.log('Location Check Result:', result);
+            
+            if (result.inTollZone) {
+                console.log(`Location (${lat}, ${lng}) is IN toll zone(s):`, result.zones);
+                return {
+                    inTollZone: true,
+                    zones: result.zones,
+                    message: `Location is in ${result.zones.length} toll zone(s)`
+                };
+            } else {
+                console.log(`Location (${lat}, ${lng}) is NOT in any toll zone`);
+                return {
+                    inTollZone: false,
+                    zones: [],
+                    message: 'Location is not in any toll zone'
+                };
+            }
+        }
+
+        // API for external use
+        window.TollZoneChecker = {
+            // Check if a specific coordinate is in any toll zone
+            checkLocation: function(lat, lng) {
+                return checkSpecificLocation(lat, lng);
+            },
+            
+            // Get all defined toll zones
+            getAllZones: function() {
+                return tollZones.map(zone => ({
+                    id: zone.id,
+                    type: zone.type,
+                    name: zone.name,
+                    coordinates: zone.coordinates
+                }));
+            },
+            
+            // Load toll zones from JSON data
+            loadZones: function(jsonData) {
+                try {
+                    clearAll();
+                    
+                    jsonData.tollZones.forEach(zoneData => {
+                        let shape;
+                        
+                        if (zoneData.type === 'polygon') {
+                            const path = zoneData.coordinates.map(coord => 
+                                new google.maps.LatLng(coord.lat, coord.lng)
+                            );
+                            
+                            shape = new google.maps.Polygon({
+                                paths: path,
+                                fillColor: '#FF6B6B',
+                                fillOpacity: 0.3,
+                                strokeColor: '#FF6B6B',
+                                strokeWeight: 3,
+                                editable: true,
+                                draggable: true
+                            });
+                        } else if (zoneData.type === 'polyline') {
+                            const path = zoneData.coordinates.map(coord => 
+                                new google.maps.LatLng(coord.lat, coord.lng)
+                            );
+                            
+                            shape = new google.maps.Polyline({
+                                path: path,
+                                strokeColor: '#2196F3',
+                                strokeWeight: 4,
+                                editable: true,
+                                draggable: true
+                            });
+                        }
+                        
+                        if (shape) {
+                            shape.setMap(map);
+                            
+                            const tollZone = {
+                                id: zoneData.id,
+                                type: zoneData.type,
+                                name: zoneData.name,
+                                coordinates: zoneData.coordinates,
+                                shape: shape
+                            };
+                            
+                            tollZones.push(tollZone);
+                            
+                            // Add delete listener
+                            google.maps.event.addListener(shape, 'rightclick', function() {
+                                deleteZone(tollZone.id);
+                            });
+                        }
+                    });
+                    
+                    updateCoordinatesDisplay();
+                    showStatus(`Loaded ${tollZones.length} toll zones`, 'success');
+                    
+                } catch (error) {
+                    showStatus('Error loading toll zones: ' + error.message, 'error');
+                }
+            }
+        };
+
+        // Initialize with demo message
+        document.addEventListener('DOMContentLoaded', function() {
+            showStatus('Enter your Google Maps API key to get started', 'info');
+        });
+    </script>
+</body>
+</html>
